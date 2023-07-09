@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 // tamanho = 2 * nDados
 #define tamanho 11
@@ -23,14 +24,14 @@ typedef struct endereco
     char estado[tamanhoEstadoString];
 } endereco;
 
-typedef struct
+typedef struct contrato
 {
     data dataContrato;
     char cargo[tamanhoString];
     float salario;
 } contrato;
 
-typedef struct
+typedef struct funcionario
 {
     char nome[tamanhoString];
     int cpf;
@@ -52,12 +53,13 @@ int getHash();
 void menu();
 void cadastrarFuncionario();
 void excluirFuncionario();
-void exibirArray();
+void exibir();
+void exibirNodes();
 void imprimirFuncionario();
-ptr_node buscarFuncionario();
 void limparBuffer();
+ptr_node buscarFuncionario();
 ptr_node inicializarPtr();
-ptr_node percorreLista();
+ptr_node percorreFila();
 funcionario getFuncionario();
 data getData();
 endereco getEndereco();
@@ -69,6 +71,42 @@ void limparBuffer()
     while ((c = getchar()) != '\n');
 }
 
+funcionario initFuncionario()
+{   
+    funcionario func; 
+
+    memset(func.nome, '\0', sizeof(func.nome));
+    func.cpf = -1;
+    func.idade = -1;
+    
+    func.dataNascimento.dia = -1;
+    func.dataNascimento.mes = -1;
+    func.dataNascimento.ano = -1;
+
+    func.contrato.dataContrato.dia = -1;
+    func.contrato.dataContrato.mes = -1;
+    func.contrato.dataContrato.ano = -1;
+    memset(func.contrato.cargo, '\0', sizeof(func.contrato.cargo));
+    func.contrato.salario = -1;
+
+    func.endereco.numero = -1;
+    memset(func.endereco.rua, '\0', sizeof(func.endereco.rua));
+    memset(func.endereco.cidade, '\0', sizeof(func.endereco.cidade));
+    memset(func.endereco.bairro, '\0', sizeof(func.endereco.bairro));
+    memset(func.endereco.estado, '\0', sizeof(func.endereco.estado));
+
+    return func;
+}
+
+void initArray(node array[])
+{
+    for (int i = 0; i < tamanho; i++)
+    {
+        array[i].proximo = NULL;
+        array[i].func = initFuncionario();
+    }
+}
+
 data getData()
 {
     int retorno = -1;
@@ -77,12 +115,14 @@ data getData()
 
     do
     {
-        printf("Insira as informações na seguinte ordem: dd/mm/aa");
-        retorno = scanf("%d/%d/%d", &dat.dia, &dat.mes, &dat.ano);
+        printf("Insira as informações na seguinte ordem: (dd/mm/aa) ");
+        printf("\nDia: "); retorno = scanf("%d", &dat.dia);
+        printf("\nMês: "); retorno = scanf("%d", &dat.mes);
+        printf("\nAno: "); retorno = scanf("%d", &dat.ano);
 
         if (retorno == 0)
         {
-            printf("Caractér inválido, insira somente números. \n\n");
+            printf("Caractéres inválidos foram inseridos. Por favor, insira somente números. \n\n");
             dat.dia, dat.mes, dat.ano = 0;
             limparBuffer();
         }
@@ -96,40 +136,29 @@ endereco getEndereco()
 {        
     printf("--------------| Endereço |--------------\n");
     
-    int retorno = 0;
+    int retorno = -1;
     endereco end;
     
     do
     {
-        printf("Numero: ");
-        retorno = scanf("%d", &end.numero);
+        printf("Numero: "); retorno = scanf("%d", &end.numero);
+        limparBuffer();
 
         if (retorno == 0)
         {
             printf("Caractér inválido, insira somente números. \n\n");
             end.numero = 0;
-            limparBuffer();
         }
 
-    } while (retorno != 0);
+    } while (retorno != 1);
 
-    printf("Rua: ");
-    fgets(end.rua, tamanhoString, stdin);
+    printf("Rua: "); fgets(end.rua, tamanhoString, stdin);
 
-    limparBuffer();
+    printf("\n\nBairro: "); fgets(end.bairro, tamanhoString, stdin);
 
-    printf("\n\nBairro: ");
-    fgets(end.bairro, tamanhoString, stdin);
+    printf("\n\nCidade: "); fgets(end.cidade, tamanhoString, stdin);
 
-    limparBuffer();
-
-    printf("\n\nCidade: ");
-    fgets(end.cidade, tamanhoString, stdin);
-    
-    limparBuffer();
-
-    printf("\n\nEstado: ");
-    fgets(end.estado, tamanhoEstadoString, stdin);
+    printf("\n\nEstado: "); fgets(end.estado, tamanhoEstadoString, stdin);
 
     return end;
 }
@@ -138,7 +167,7 @@ contrato getContrato()
 {
     printf("--------------| Contrato |--------------\n");
 
-    int retorno = 0;
+    int retorno = -1;
     contrato cont;
 
     cont.dataContrato = getData();
@@ -149,8 +178,8 @@ contrato getContrato()
 
     do
     {
-        printf("Numero: ");
-        retorno = scanf("%f", &cont.salario);
+        printf("Salário: "); retorno = scanf("%f", &cont.salario);
+        limparBuffer();
 
         if (retorno == 0)
         {
@@ -159,48 +188,57 @@ contrato getContrato()
             limparBuffer();
         }
 
-    } while (retorno != 0);
+    } while (retorno != 1);
 
     return cont;
 }
 
 funcionario getFuncionario()
 {
+    limparBuffer();
+
     printf("--------------| Funcionario |--------------\n");
 
     funcionario func;
 
-    printf("Nome: ");
-    fgets(func.nome, tamanhoString, stdin);
+    printf("Nome: "); fgets(func.nome, tamanhoString, stdin);
 
-    printf("\n\nIdade: ");
-    scanf("%d", &func.idade);
+    printf("\nIdade: "); scanf("%d", &func.idade);
 
-    printf("\n\nCPF: ");
-    scanf("%d", &func.cpf);
+    limparBuffer();
 
-    printf("\n>>> insira data de nascimento.");
-    func.dataNascimento = getData();
-    func.endereco = getEndereco();
-    func.contrato = getContrato();
+    printf("\nCPF: "); scanf("%d", &func.cpf);
+
+    limparBuffer();
+
+    //printf("\n>>> Insira data de nascimento. \n\n");
+    //func.dataNascimento = getData();
+    //func.endereco = getEndereco();
+    //func.contrato = getContrato();
 
     return func;
 }
 
-ptr_node inicializarPtr(struct node * elemento)
+void initNode(ptr_node elemento)
 {
-    elemento = (ptr_node)malloc(sizeof(ptr_node));
+    elemento->func.nome[0] = '\0';
+    elemento->func = initFuncionario();
     elemento->proximo = NULL;
+}
+
+ptr_node inicializarPtr(ptr_node elemento)
+{
+    elemento = (ptr_node)malloc(sizeof(node));
+    initNode(elemento);
 
     return elemento;
 }
 
-ptr_node percorreLista(ptr_node elemento)
+ptr_node percorreFila(ptr_node elemento) // acha o ultimo elemento da lista e inicializa ele
 {
-    ptr_node navegador = elemento;
     if (elemento->proximo == NULL)
     {
-        navegador->proximo = inicializarPtr(elemento);
+        elemento->proximo = inicializarPtr(elemento);
         elemento = elemento->proximo;
         return elemento;
     }
@@ -213,51 +251,87 @@ ptr_node percorreLista(ptr_node elemento)
         
         elemento->proximo = inicializarPtr(elemento->proximo);
         elemento = elemento->proximo;
+
         return elemento;
     }
 }
 
-ptr_node buscarFuncionario(node array[])
+ptr_node buscaEmFila(ptr_node elemento, int cpfBusca, int seletor)
 {
-    int cpf = 0;
+    if (seletor == 3)
+    {
+        while (elemento->proximo != NULL || elemento->func.cpf != cpfBusca)
+        {
+            elemento = elemento->proximo;
+        }
+
+        if (elemento->proximo == NULL && elemento->func.cpf != cpfBusca)
+        {
+            return NULL;
+        }
+        else
+        {
+            return elemento;
+        }
+    }
+    else if (seletor == 4)
+    {
+        ptr_node anterior = elemento;
+        while (elemento->proximo != NULL || elemento->func.cpf != cpfBusca)
+        {   
+            anterior = elemento;
+            elemento = elemento->proximo;
+        }
+
+        if (elemento->proximo == NULL && elemento->func.cpf != cpfBusca)
+        {
+            return NULL;
+        }
+        else
+        {
+            return anterior;
+        }
+    }
+}
+
+ptr_node buscarFuncionario(node array[], int seletor)
+{
+    int cpfBusca = 0;
     int retorno = -1;
 
     do
     {
-        printf("Insira o CPF do Funcionário: (0. Sair)");
-        retorno = scanf("%d", &cpf);
-
-        if (cpf == 0)
-        {
-            return NULL;
-        }
+        printf("Insira o CPF do Funcionário: ");
+        retorno = scanf("%d", &cpfBusca);
+        limparBuffer();
 
         if (retorno == 0)
         {
-            cpf = 0;
+            cpfBusca = 0;
             printf("Caractér inválido, insira somente números. \n\n");
-            limparBuffer();
         }
 
     } while (retorno != 1);
 
-    int chave = getHash(cpf);
+    int chave = getHash(cpfBusca);
 
     if (array[chave].proximo != NULL)
     {
-        ptr_node navegador = &array[chave];
-        while (navegador->proximo != NULL || navegador->func.cpf == cpf)
-        {
-            navegador = navegador->proximo;
-        }
-
-        return navegador;
+        return buscaEmFila(&array[chave], cpfBusca, seletor);
     }
     else
     {
-        return &array[chave];
+        if (array[chave].func.cpf == -1)
+        {
+            return NULL;
+        }
+        else
+        {
+            return &array[chave];
+        }
     }
 }
+    
 
 int getHash(int cpf)
 {
@@ -266,21 +340,32 @@ int getHash(int cpf)
 
 void excluirFuncionario(node array[], ptr_node excluir)
 {
-    ptr_node atual = excluir;
-    atual->proximo = excluir->proximo;
-    free(excluir);
+    if (excluir == NULL)
+    {
+        printf("Funcionario não encontrado. \n\n");
+        getchar();
+        return;
+    }
+    else
+    {
+        if (excluir == array[chave])
+        {
+            // fazer a função excluir um indice do array, sem ser nó
+        }
+    }
 }
 
 void cadastrarFuncionario(node array[])
 {
     funcionario temp;
-    temp = getFuncionario();
-    int chave = getHash(temp.cpf);
+    temp = getFuncionario(); // pega as informações do funcionário
+    int chave = getHash(temp.cpf); // pega chave para inserção no array
 
-    if (array[chave].proximo != NULL)
+    if (array[chave].func.idade != -1) 
     {
-        ptr_node navegador = percorreLista(&array[chave]);
+        ptr_node navegador = percorreFila(&array[chave]);
         navegador->func = temp;
+        int j = 0;
     }   
     else
     {
@@ -288,49 +373,55 @@ void cadastrarFuncionario(node array[])
     }
 }
 
-void imprimirFuncionario(ptr_node func)
-{
-    printf("\nFuncionário: ");
-    printf("\n  Nome: %s", func->func.nome);
-    printf("\n  CPF: %d", func->func.cpf);
-    printf("\n  Idade: %d", func->func.idade);
-    printf("\n  Data de Nascimento: %d/%d/%d", func->func.dataNascimento.dia, func->func.dataNascimento.mes, func->func.dataNascimento.ano);
-    
-    printf("\nContrato: ");
-    printf("\n  Data de Contratação: %d/%d/%d", func->func.contrato.dataContrato.dia, func->func.contrato.dataContrato.mes, func->func.contrato.dataContrato.ano);
-    printf("\n  Cargo: %s", func->func.contrato.cargo);
-    printf("\n  Salário: %f", func->func.contrato.salario);
-
-    printf("\nEndereço: ");
-    printf("\n  Rua: %s", func->func.endereco.rua);
-    printf("\n  Número: %d", func->func.endereco.numero);
-    printf("\n  Bairro: %s", func->func.endereco.bairro);
-    printf("\n  Cidade: %s", func->func.endereco.cidade);
-    printf("\n  Estado: %s", func->func.endereco.estado);
-}
-
-void exibirArray(node array[])
+void exibir(node array[]) // corre pelo vetor mandando ponteiros para exbirNodes() caso o indice esteja cheio
 {
     for (int i = 0; i < tamanho; i++)
     {
-        printf("\nFuncionário: ");
-        printf("\n  Nome: %s", array[i].func.nome);
-        printf("\n  CPF: %d", array[i].func.cpf);
-        printf("\n  Idade: %d", array[i].func.idade);
-        printf("\n  Data de Nascimento: %d/%d/%d", array[i].func.dataNascimento.dia, array[i].func.dataNascimento.mes, array[i].func.dataNascimento.ano);
-        
-        printf("\nContrato: ");
-        printf("\n  Data de Contratação: %d/%d/%d", array[i].func.contrato.dataContrato.dia, array[i].func.contrato.dataContrato.mes, array[i].func.contrato.dataContrato.ano);
-        printf("\n  Cargo: %s", array[i].func.contrato.cargo);
-        printf("\n  Salário: %f", array[i].func.contrato.salario);
-
-        printf("\nEndereço: ");
-        printf("\n  Rua: %s", array[i].func.endereco.rua);
-        printf("\n  Número: %d", array[i].func.endereco.numero);
-        printf("\n  Bairro: %s", array[i].func.endereco.bairro);
-        printf("\n  Cidade: %s", array[i].func.endereco.cidade);
-        printf("\n  Estado: %s", array[i].func.endereco.estado);
+        if (array[i].func.idade != -1)
+        {
+            exibirNodes(&array[i]);
+            if (array[i].proximo != NULL) // imprime os nós 
+            {
+                ptr_node navegador = &array[i];
+                navegador = navegador->proximo;
+                while (true)
+                {
+                    exibirNodes(navegador);
+                    if (navegador->proximo == NULL)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        navegador = navegador->proximo;
+                    }
+                }   
+            }
+        }        
     }
+}
+
+void exibirNodes(ptr_node navegador)
+{
+    printf("Funcionário:");
+    printf("\n  Nome: %s", navegador->func.nome);
+    printf("  CPF: %d", navegador->func.cpf);
+    printf("\n  Idade: %d", navegador->func.idade);
+    //printf("\n  Data de Nascimento: %d/%d/%d", navegador->func.dataNascimento.dia, navegador->func.dataNascimento.mes, navegador->func.dataNascimento.ano);
+
+    // printf("\nContrato: ");
+    // printf("\n  Data de Contratação: %d/%d/%d", navegador->func.contrato.dataContrato.dia, navegador->func.contrato.dataContrato.mes, navegador->func.contrato.dataContrato.ano);
+    // printf("\n  Cargo: %s", navegador->func.contrato.cargo);
+    // printf("\n  Salário: %f", navegador->func.contrato.salario);
+
+    //printf("\nEndereço: ");
+    //printf("\n  Rua: %s", navegador->func.endereco);
+    //printf("\n  Número: %d", navegador->func.endereco.numero);
+    //printf("\n  Estado: %s", navegador->func.endereco.estado);
+    //printf("\n  Bairro: %s", navegador->func.endereco.bairro);
+    //printf("\n  Cidade: %s", navegador->func.endereco.cidade);
+
+    printf("\n\n");
 }
 
 void menu(node array[])
@@ -338,7 +429,7 @@ void menu(node array[])
     int seletor = -1;
     while (seletor != 0)   
     {
-        system("clear");
+        //system("clear");
 
         printf("\nSelecione uma opção: \n\n");
         printf("0. Sair \n");
@@ -349,6 +440,7 @@ void menu(node array[])
 
         printf("\n >>> ");
         scanf("%d", &seletor);
+        limparBuffer();
 
         switch (seletor)
         {
@@ -361,16 +453,25 @@ void menu(node array[])
             break;
 
         case 2:
-            exibirArray(array);
+            exibir(array);
             break;
 
         case 3:
-            imprimirFuncionario(buscarFuncionario(array));
+            ptr_node funcBusca = buscarFuncionario(array, seletor);
+            if (funcBusca == NULL)
+            {
+                printf("Não foi possível encontrar o funcionário. \n\n");
+                getchar();
+            }
+            else
+            {
+                exibirNodes(funcBusca);
+            }
 
             break;
 
         case 4:
-            excluirFuncionario(array, buscarFuncionario(array));
+            excluirFuncionario(array, buscarFuncionario(array, seletor));
             break;
 
         default:
@@ -384,6 +485,7 @@ void menu(node array[])
 int main(void)
 {
     node array[tamanho];
+    initArray(array);
     menu(array);
 
     return 0;
