@@ -277,7 +277,7 @@ ptr_node buscaEmFila(ptr_node elemento, int cpfBusca, int seletor)
     else if (seletor == 4)
     {
         ptr_node anterior = elemento;
-        while (elemento->proximo != NULL || elemento->func.cpf != cpfBusca)
+        while (elemento->proximo != NULL && elemento->func.cpf != cpfBusca)
         {   
             anterior = elemento;
             elemento = elemento->proximo;
@@ -294,7 +294,7 @@ ptr_node buscaEmFila(ptr_node elemento, int cpfBusca, int seletor)
     }
 }
 
-ptr_node buscarFuncionario(node array[], int seletor)
+ptr_node buscarFuncionario(node array[], int seletor, int * chaveExcluir)
 {
     int cpfBusca = 0;
     int retorno = -1;
@@ -326,32 +326,49 @@ ptr_node buscarFuncionario(node array[], int seletor)
             return NULL;
         }
         else
-        {
+        {   
+            *chaveExcluir = chave;
             return &array[chave];
         }
     }
 }
-    
 
 int getHash(int cpf)
 {
     return cpf % tamanho;
 }
 
-void excluirFuncionario(node array[], ptr_node excluir)
+void excluirFuncionario(node array[])
 {
+    int chaveExcluir = -1;
+    ptr_node excluir = buscarFuncionario(array, 4, &chaveExcluir);
+
     if (excluir == NULL)
     {
-        printf("Funcionario não encontrado. \n\n");
+        printf("Funcionário não encontrado. \n\n");
         getchar();
         return;
     }
+    else if (excluir != NULL && chaveExcluir != -1)
+    {
+        if (array[chaveExcluir].proximo != NULL)
+        {
+            excluir = array[chaveExcluir].proximo;
+            array[chaveExcluir].func = excluir->func;
+            array[chaveExcluir].proximo = excluir->proximo;
+            free(excluir);
+        }
+        else
+        {
+            array[chaveExcluir].func = initFuncionario();
+        }
+        
+    }
     else
     {
-        if (excluir == array[chave])
-        {
-            // fazer a função excluir um indice do array, sem ser nó
-        }
+        ptr_node seguinte = excluir->proximo;
+        excluir->proximo = seguinte->proximo;
+        free(seguinte);
     }
 }
 
@@ -457,7 +474,7 @@ void menu(node array[])
             break;
 
         case 3:
-            ptr_node funcBusca = buscarFuncionario(array, seletor);
+            ptr_node funcBusca = buscarFuncionario(array, seletor, NULL);
             if (funcBusca == NULL)
             {
                 printf("Não foi possível encontrar o funcionário. \n\n");
@@ -471,7 +488,7 @@ void menu(node array[])
             break;
 
         case 4:
-            excluirFuncionario(array, buscarFuncionario(array, seletor));
+            excluirFuncionario(array);
             break;
 
         default:
