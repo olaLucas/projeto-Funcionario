@@ -460,7 +460,7 @@ void menu(node array[])
 {
     int seletor = -1;
 
-    system("cls");
+    system("clear");
     while (seletor != 0)   
     {
         printf("\nSelecione uma opção: \n\n");
