@@ -405,7 +405,7 @@ void cadastrarFuncionario(node array[])
     }
 }
 
-void exibir(node array[]) // corre pelo vetor mandando ponteiros para exbirNodes() caso o indice esteja cheio
+void exibir(node array[]) // corre pelo vetor mandando ponteiros para imprimirFuncionario() caso o indice esteja cheio
 {
     for (int i = 0; i < tamanho; i++)
     {
