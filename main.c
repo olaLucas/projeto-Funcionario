@@ -459,6 +459,8 @@ void imprimirFuncionario(ptr_node navegador)
 void menu(node array[])
 {
     int seletor = -1;
+
+    system("cls");
     while (seletor != 0)   
     {
         printf("\nSelecione uma opção: \n\n");
